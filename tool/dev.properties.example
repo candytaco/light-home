@@ -1,0 +1,5 @@
+# Copy to tool/dev.properties (git-ignored). Values are compiled into DEBUG builds only.
+HA_URL=https://ha.example.com
+# Cloudflare Access service token; leave both empty if the server is not behind Access
+CF_CLIENT_ID=
+CF_CLIENT_SECRET=

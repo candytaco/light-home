@@ -1,1 +1,0 @@
-"""Light signing-zone utilities."""

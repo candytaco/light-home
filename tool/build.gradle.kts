@@ -4,6 +4,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.util.Properties
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import javax.net.ssl.SSLContext
@@ -23,8 +24,22 @@ plugins {
     alias(libs.plugins.light.sdk)
 }
 
+// Debug-only connection defaults, read from the git-ignored tool/dev.properties (see
+// dev.properties.example). Release builds, including Light's build server, always get "".
+// Read through providers so Gradle notices when the file is created or edited.
+val devProps = Properties().also { props ->
+    providers.fileContents(layout.projectDirectory.file("dev.properties")).asText.orNull
+        ?.let { props.load(it.reader()) }
+}
+val devKeys = listOf("HA_URL", "CF_CLIENT_ID", "CF_CLIENT_SECRET")
+fun quoted(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+
 android {
     compileSdk = rootProject.ext["compileSdk"] as Int
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     signingConfigs {
         create("lightsdkDev") {
@@ -42,11 +57,14 @@ android {
         targetSdk = rootProject.ext["targetSdk"] as Int
 
         manifestPlaceholders["sdkVersion"] = property("sdkVersion") as String
+
+        devKeys.forEach { buildConfigField("String", "DEV_$it", quoted("")) }
     }
 
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("lightsdkDev")
+            devKeys.forEach { buildConfigField("String", "DEV_$it", quoted(devProps.getProperty(it, ""))) }
         }
         release {
             isMinifyEnabled = true
@@ -75,6 +93,8 @@ kotlin {
 
 dependencies {
     implementation(project(":sdk:client"))
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(libs.kotlin.test)
     ksp(libs.androidx.room.compiler)
 }

@@ -46,10 +46,5 @@ bin/
 ### Clanker ###
 .claude/
 
-### Python (builder/) ###
-__pycache__/
-*.py[cod]
-.pytest_cache/
-
-### Signing keys ###
-/signer/keys/
+### Home Assistant tool: local credentials ###
+/tool/dev.properties
